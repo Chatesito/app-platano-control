@@ -1,0 +1,98 @@
+.main {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+.titulo {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.campo {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.5rem;
+  border: 2px solid #333;
+  border-radius: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.select {
+  width: 80px;
+  padding: 1rem;
+  font-size: 1.5rem;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background-color: #333;
+  color: white;
+  box-sizing: border-box;
+}
+
+.prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: #333;
+  color: white;
+  border: 2px solid #333;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  box-sizing: border-box;
+}
+
+.inputConPrefix {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.5rem;
+  border: 2px solid #333;
+  border-radius: 0 8px 8px 0;
+  border-left: none;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.boton {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: #2d5a27;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+  box-sizing: border-box;
+}
+
+.boton:active {
+  background-color: #1e3d1a;
+}
+
+.exito {
+  font-size: 2rem;
+  color: #2d5a27;
+  text-align: center;
+  padding: 2rem;
+}

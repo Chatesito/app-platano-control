@@ -96,15 +96,41 @@ export default function VentaPage() {
   }
 
   async function cargarUltimoPago(clienteId: number) {
-    const ultimo = await db.historialClientes
+    // Buscar en historial de pagos
+    const ultimoPago = await db.historialClientes
       .where('clienteId')
       .equals(clienteId)
       .filter(h => h.tipo === 'pago')
       .reverse()
       .sortBy('fecha');
 
-    if (ultimo && ultimo.length > 0) {
-      setUltimosPagos(prev => new Map(prev).set(clienteId, { monto: ultimo[0].datos.montoPagado || 0, fecha: ultimo[0].fecha }));
+    // Buscar ventas con abono inicial
+    const ventasConAbono = await db.ventas
+      .where('clienteId')
+      .equals(clienteId)
+      .filter(v => (v.abonoInicial || 0) > 0)
+      .reverse()
+      .sortBy('fecha');
+
+    // Determinar cuál es más reciente
+    let ultimoPagoData = null;
+
+    if (ultimoPago.length > 0 && ventasConAbono.length > 0) {
+      const fechaPago = new Date(ultimoPago[0].fecha).getTime();
+      const fechaVenta = new Date(ventasConAbono[0].fecha).getTime();
+      if (fechaPago >= fechaVenta) {
+        ultimoPagoData = { monto: ultimoPago[0].datos.montoPagado || 0, fecha: ultimoPago[0].fecha };
+      } else {
+        ultimoPagoData = { monto: ventasConAbono[0].abonoInicial || 0, fecha: ventasConAbono[0].fecha };
+      }
+    } else if (ultimoPago.length > 0) {
+      ultimoPagoData = { monto: ultimoPago[0].datos.montoPagado || 0, fecha: ultimoPago[0].fecha };
+    } else if (ventasConAbono.length > 0) {
+      ultimoPagoData = { monto: ventasConAbono[0].abonoInicial || 0, fecha: ventasConAbono[0].fecha };
+    }
+
+    if (ultimoPagoData) {
+      setUltimosPagos(prev => new Map(prev).set(clienteId, ultimoPagoData));
     }
   }
 
@@ -216,17 +242,6 @@ export default function VentaPage() {
       abonoInicial: abono,
       fecha: new Date(),
     });
-
-    // Si hay abono inicial, registrarlo como "último pago"
-    if (abono > 0) {
-      await db.historialClientes.add({
-        clienteId: clienteSeleccionado,
-        tipo: 'pago',
-        descripcion: `Pagó $${abono}`,
-        datos: { montoPagado: abono },
-        fecha: new Date(),
-      });
-    }
 
     // Actualizar deuda
     const deudaActual = await db.deudasClientes.where('clienteId').equals(clienteSeleccionado).first();

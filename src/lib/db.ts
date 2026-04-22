@@ -58,6 +58,8 @@ export interface HistorialCliente {
     campoEditado?: string;
     valorAnterior?: string;
     valorNuevo?: string;
+    deudaAntes?: number;
+    deudaDespues?: number;
   };
   fecha: Date;
 }

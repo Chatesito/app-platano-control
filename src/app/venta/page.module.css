@@ -48,6 +48,10 @@
   border-radius: 4px;
 }
 
+.nombreCliente {
+  flex: 1;
+}
+
 /* Botones principales */
 .botonNuevo,
 .botonVentaRapida {
@@ -74,9 +78,10 @@
 .clienteExpandido {
   padding: 1rem;
   background-color: #333;
-  border-radius: 8px;
+  border-radius: 0 0 8px 8px;
   color: white;
-  margin-bottom: 1rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .clienteInfo h2 {
@@ -101,24 +106,36 @@
 }
 
 /* Acciones del cliente */
-.clienteAcciones {
+.accionesContainer {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
   margin-top: 1rem;
 }
 
-.botonAccion {
+.accionesRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.accionesRow:first-child button {
   flex: 1;
-  min-width: 60px;
-  padding: 1rem;
-  font-size: 1.2rem;
+}
+
+.accionesRow:last-child button {
+  flex: 1;
+}
+
+.botonAccion {
+  padding: 0.75rem;
+  font-size: 1rem;
   font-weight: bold;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   background-color: #2d5a27;
   color: white;
+  text-align: center;
 }
 
 .botonAccion:active {
@@ -164,6 +181,31 @@
   margin-bottom: 0.75rem;
   background-color: #222;
   color: white;
+}
+
+/* Toggle Kilos / Precio */
+.toggleContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.toggleBtn {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: 2px solid #555;
+  border-radius: 8px;
+  background-color: #222;
+  color: #888;
+  cursor: pointer;
+}
+
+.toggleBtn.toggleActive {
+  background-color: #2d5a27;
+  color: white;
+  border-color: #2d5a27;
 }
 
 .input::placeholder {
@@ -212,6 +254,19 @@
   border-radius: 8px;
   cursor: pointer;
   margin-top: 1rem;
+}
+
+.botonHistorial {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }
 
 /* Historial */

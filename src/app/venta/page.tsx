@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db, Cliente, DeudaCliente, HistorialCliente, PrecioKg, HistorialTipo } from '@/lib/db';
+import { db, Cliente, DeudaCliente, HistorialCliente, PrecioKg, HistorialTipo, VentaRapida } from '@/lib/db';
 import styles from './page.module.css';
 
 export default function VentaPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [deudas, setDeudas] = useState<Map<number, DeudaCliente>>(new Map());
+  const [ultimosPagos, setUltimosPagos] = useState<Map<number, {monto: number, fecha: Date}>>(new Map());
   const [clienteSeleccionado, setClienteSeleccionado] = useState<number | null>(null);
-  const [ultimoPago, setUltimoPago] = useState<{monto: number, fecha: Date} | null>(null);
 
   // Modal states
   const [mostrarModalVenta, setMostrarModalVenta] = useState(false);
@@ -18,12 +18,15 @@ export default function VentaPage() {
   const [mostrarModalVentaRapida, setMostrarModalVentaRapida] = useState(false);
   const [mostrarModalNuevoCliente, setMostrarModalNuevoCliente] = useState(false);
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
+  const [mostrarModalHistorialVentaRapida, setMostrarModalHistorialVentaRapida] = useState(false);
 
   // Form states
   const [nuevoClienteNombre, setNuevoClienteNombre] = useState('');
   const [nuevoClienteTelefono, setNuevoClienteTelefono] = useState('');
   const [nuevoClienteDireccion, setNuevoClienteDireccion] = useState('');
   const [ventaKilos, setVentaKilos] = useState('');
+  const [ventaModo, setVentaModo] = useState<'kg' | 'precio'>('kg');
+  const [precioKgActual, setPrecioKgActual] = useState<number>(0);
   const [ventaAbono, setVentaAbono] = useState('');
   const [pagoMonto, setPagoMonto] = useState('');
   const [editarNombre, setEditarNombre] = useState('');
@@ -33,6 +36,7 @@ export default function VentaPage() {
 
   // Historial
   const [historial, setHistorial] = useState<HistorialCliente[]>([]);
+  const [historialVentaRapida, setHistorialVentaRapida] = useState<VentaRapida[]>([]);
 
   useEffect(() => {
     cargarClientes();
@@ -50,15 +54,29 @@ export default function VentaPage() {
     setClientes(clientesDB);
 
     const deudasMap = new Map<number, DeudaCliente>();
+    const pagosMap = new Map<number, {monto: number, fecha: Date}>();
+    
     for (const cliente of clientesDB) {
       if (cliente.id) {
         const deuda = await db.deudasClientes.where('clienteId').equals(cliente.id).first();
         if (deuda) {
           deudasMap.set(cliente.id, deuda);
         }
+        
+        // Cargar último pago
+        const ultimo = await db.historialClientes
+          .where('clienteId')
+          .equals(cliente.id)
+          .filter(h => h.tipo === 'pago')
+          .reverse()
+          .sortBy('fecha');
+        if (ultimo && ultimo.length > 0) {
+          pagosMap.set(cliente.id, { monto: ultimo[0].datos.montoPagado || 0, fecha: ultimo[0].fecha });
+        }
       }
     }
     setDeudas(deudasMap);
+    setUltimosPagos(pagosMap);
   }
 
   async function cargarDeudaCliente(clienteId: number) {
@@ -77,9 +95,7 @@ export default function VentaPage() {
       .sortBy('fecha');
 
     if (ultimo && ultimo.length > 0) {
-      setUltimoPago({ monto: ultimo[0].datos.montoPagado || 0, fecha: ultimo[0].fecha });
-    } else {
-      setUltimoPago(null);
+      setUltimosPagos(prev => new Map(prev).set(clienteId, { monto: ultimo[0].datos.montoPagado || 0, fecha: ultimo[0].fecha }));
     }
   }
 
@@ -92,9 +108,28 @@ export default function VentaPage() {
     setHistorial(h);
   }
 
+  async function cargarHistorialVentaRapida() {
+    const h = await db.ventasRapidas.orderBy('fecha').reverse().toArray();
+    setHistorialVentaRapida(h);
+  }
+
   // Crear cliente
   async function crearCliente() {
     if (!nuevoClienteNombre.trim()) return;
+
+    // Validar que el nombre solo tenga letras
+    const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!soloLetras.test(nuevoClienteNombre.trim())) {
+      alert('El nombre solo puede contener letras');
+      return;
+    }
+
+    // Validar que el teléfono solo tenga números (si se ingresa)
+    const soloNumeros = /^\d+$/;
+    if (nuevoClienteTelefono.trim() && !soloNumeros.test(nuevoClienteTelefono.trim())) {
+      alert('El teléfono solo puede contener números');
+      return;
+    }
 
     const id = await db.clientes.add({
       nombre: nuevoClienteNombre.trim(),
@@ -129,11 +164,36 @@ export default function VentaPage() {
   async function registrarVenta() {
     if (!clienteSeleccionado || !ventaKilos) return;
 
+    const valorIngresado = parseFloat(ventaKilos);
+    
+    // Validar que no sea negativo
+    if (isNaN(valorIngresado) || valorIngresado <= 0) {
+      alert('El valor debe ser mayor a 0');
+      return;
+    }
+
+    // Validar abono negativo
+    if (ventaAbono && parseInt(ventaAbono) < 0) {
+      alert('El abono no puede ser negativo');
+      return;
+    }
+
     const precioKg = await db.preciosKg.orderBy('fechaActualizacion').last();
     if (!precioKg) return;
 
-    const k = parseFloat(ventaKilos);
-    const total = k * precioKg.valor;
+    let k: number;
+    let total: number;
+
+    if (ventaModo === 'kg') {
+      // Modo kilos: el usuario ingresa los kilos
+      k = valorIngresado;
+      total = k * precioKg.valor;
+    } else {
+      // Modo precio: el usuario ingresa el dinero, se calculan los kilos
+      total = valorIngresado;
+      k = total / precioKg.valor;
+    }
+
     const abono = ventaAbono ? parseInt(ventaAbono) : 0;
     const pendiente = total - abono;
 
@@ -179,8 +239,25 @@ export default function VentaPage() {
     if (!clienteSeleccionado || !pagoMonto) return;
 
     const monto = parseInt(pagoMonto);
+    
+    // Validar que no sea negativo
+    if (isNaN(monto) || monto <= 0) {
+      alert('El monto debe ser mayor a 0');
+      return;
+    }
+
     const deudaActual = await db.deudasClientes.where('clienteId').equals(clienteSeleccionado).first();
     if (!deudaActual) return;
+
+    const deudaAntes = deudaActual.totalVendido - deudaActual.totalPagado;
+    
+    // Validar que no pague más de lo que debe
+    if (monto > deudaAntes) {
+      alert(`El cliente solo debe $${deudaAntes.toLocaleString('es-CO')}. No puede pagar más.`);
+      return;
+    }
+
+    const deudaDespues = deudaAntes - monto;
 
     await db.deudasClientes.update(clienteSeleccionado, {
       totalPagado: deudaActual.totalPagado + monto,
@@ -191,7 +268,7 @@ export default function VentaPage() {
       clienteId: clienteSeleccionado,
       tipo: 'pago',
       descripcion: `Pagó $${monto}`,
-      datos: { montoPagado: monto },
+      datos: { montoPagado: monto, deudaAntes, deudaDespues },
       fecha: new Date(),
     });
 
@@ -264,7 +341,7 @@ export default function VentaPage() {
     });
 
     await db.historialClientes.add({
-      clienteId: 0, // Venta rápida no tiene cliente
+      clienteId: 0,
       tipo: 'venta_rapida',
       descripcion: `Venta rápida: $${monto}`,
       datos: { total: monto },
@@ -292,67 +369,81 @@ export default function VentaPage() {
     }
   }
 
-  const deudaActual = clienteSeleccionado ? deudas.get(clienteSeleccionado) : null;
+  function abrirHistorialVentaRapida() {
+    cargarHistorialVentaRapida();
+    setMostrarModalHistorialVentaRapida(true);
+  }
+
   const clienteActual = clientes.find(c => c.id === clienteSeleccionado);
 
   return (
     <main className={styles.main}>
       <h1 className={styles.titulo}>Registrar Venta</h1>
 
-      {/* Lista de clientes */}
-      <div className={styles.listaClientes}>
-        {clientes.map(cliente => (
-          <div
-            key={cliente.id}
-            className={`${styles.clienteItem} ${cliente.id === clienteSeleccionado ? styles.seleccionado : ''}`}
-            onClick={() => setClienteSeleccionado(cliente.id || null)}
-          >
-            {cliente.nombre}
-            {cliente.id && deudas.get(cliente.id) && (
-              <span className={styles.badgeDeuda}>
-                ${(deudas.get(cliente.id)!.totalVendido - deudas.get(cliente.id)!.totalPagado).toLocaleString('es-CO')}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Botón nuevo cliente */}
+      {/* Botones principales */}
       <button className={styles.botonNuevo} onClick={() => setMostrarModalNuevoCliente(true)}>
         + Nuevo Cliente
       </button>
 
-      {/* Botón Venta Rápida */}
       <button className={styles.botonVentaRapida} onClick={() => setMostrarModalVentaRapida(true)}>
         Venta Rápida
       </button>
 
-      {/* Cliente seleccionado - detalles y acciones */}
-      {clienteSeleccionado && clienteActual && (
-        <div className={styles.clienteExpandido}>
-          <div className={styles.clienteInfo}>
-            <h2>{clienteActual.nombre}</h2>
-            <p className={styles.deuda}>
-              Debe: <strong>${deudaActual ? (deudaActual.totalVendido - deudaActual.totalPagado).toLocaleString('es-CO') : '0'}</strong>
-            </p>
-            {ultimoPago && (
-              <p className={styles.ultimoPago}>
-                Último pago: ${ultimoPago.monto.toLocaleString('es-CO')} - {ultimoPago.fecha.toLocaleDateString('es-CO')}
-              </p>
-            )}
-            {clienteActual.telefono && <p>Tel: {clienteActual.telefono}</p>}
-            {clienteActual.direccion && <p>Dir: {clienteActual.direccion}</p>}
-          </div>
+      {/* Lista de clientes con expandido integrado */}
+      <div className={styles.listaClientes}>
+        {clientes.map(cliente => {
+          const deuda = cliente.id ? deudas.get(cliente.id) : null;
+          const ultimoPago = cliente.id ? ultimosPagos.get(cliente.id) : null;
+          const expandido = cliente.id === clienteSeleccionado;
 
-          <div className={styles.clienteAcciones}>
-            <button className={styles.botonAccion} onClick={() => setMostrarModalVenta(true)}>Venta</button>
-            <button className={styles.botonAccion} onClick={() => setMostrarModalPago(true)}>Pago</button>
-            <button className={styles.botonAccion} onClick={abrirEditarCliente}>✏️</button>
-            <button className={styles.botonAccion} onClick={abrirHistorial}>📋</button>
-            <button className={styles.botonAccion} onClick={() => setMostrarModalEliminar(true)}>🗑️</button>
-          </div>
-        </div>
-      )}
+          return (
+            <div key={cliente.id}>
+              <div
+                className={`${styles.clienteItem} ${expandido ? styles.seleccionado : ''}`}
+                onClick={() => setClienteSeleccionado(expandido ? null : cliente.id || null)}
+              >
+                <span className={styles.nombreCliente}>{cliente.nombre}</span>
+                {cliente.id && deuda && (
+                  <span className={styles.badgeDeuda}>
+                    ${(deuda.totalVendido - deuda.totalPagado).toLocaleString('es-CO')}
+                  </span>
+                )}
+              </div>
+
+              {/* Expandido debajo de cada cliente */}
+              {expandido && clienteActual && (
+                <div className={styles.clienteExpandido}>
+                  <div className={styles.clienteInfo}>
+                    <h2>{clienteActual.nombre}</h2>
+                    <p className={styles.deuda}>
+                      Debe: <strong>${deuda ? (deuda.totalVendido - deuda.totalPagado).toLocaleString('es-CO') : '0'}</strong>
+                    </p>
+                    {ultimoPago && (
+                      <p className={styles.ultimoPago}>
+                        Último pago: ${ultimoPago.monto.toLocaleString('es-CO')} - {ultimoPago.fecha.toLocaleDateString('es-CO')}
+                      </p>
+                    )}
+                    {clienteActual.telefono && <p>Tel: {clienteActual.telefono}</p>}
+                    {clienteActual.direccion && <p>Dir: {clienteActual.direccion}</p>}
+                  </div>
+
+                  <div className={styles.accionesContainer}>
+                    <div className={styles.accionesRow}>
+                      <button className={styles.botonAccion} onClick={() => setMostrarModalVenta(true)}>Venta</button>
+                      <button className={styles.botonAccion} onClick={() => setMostrarModalPago(true)}>Pago</button>
+                    </div>
+                    <div className={styles.accionesRow}>
+                      <button className={styles.botonAccion} onClick={abrirEditarCliente}>✏️</button>
+                      <button className={styles.botonAccion} onClick={abrirHistorial}>📋</button>
+                      <button className={styles.botonAccion} onClick={() => setMostrarModalEliminar(true)}>🗑️</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Modal Nuevo Cliente */}
       {mostrarModalNuevoCliente && (
@@ -375,7 +466,30 @@ export default function VentaPage() {
         <div className={styles.modal}>
           <div className={styles.modalContenido}>
             <h2>Nueva Venta</h2>
-            <input className={styles.input} type="number" placeholder="Kilos" value={ventaKilos} onChange={e => setVentaKilos(e.target.value)} />
+            
+            {/* Toggle Kg / Precio */}
+            <div className={styles.toggleContainer}>
+              <button 
+                className={`${styles.toggleBtn} ${ventaModo === 'kg' ? styles.toggleActive : ''}`}
+                onClick={() => setVentaModo('kg')}
+              >
+                Kilos
+              </button>
+              <button 
+                className={`${styles.toggleBtn} ${ventaModo === 'precio' ? styles.toggleActive : ''}`}
+                onClick={() => setVentaModo('precio')}
+              >
+                Precio ($)
+              </button>
+            </div>
+
+            <input 
+              className={styles.input} 
+              type="number" 
+              placeholder={ventaModo === 'kg' ? 'Kilos' : 'Precio ($)'} 
+              value={ventaKilos} 
+              onChange={e => setVentaKilos(e.target.value)} 
+            />
             <input className={styles.input} type="number" placeholder="Abono inicial ($)" value={ventaAbono} onChange={e => setVentaAbono(e.target.value)} />
             <div className={styles.modalBotones}>
               <button className={styles.botonCancelar} onClick={() => setMostrarModalVenta(false)}>Cancelar</button>
@@ -425,8 +539,11 @@ export default function VentaPage() {
                 <div key={h.id} className={`${styles.historialItem} ${styles[h.tipo]}`}>
                   <p className={styles.historialFecha}>{h.fecha.toLocaleDateString('es-CO')}</p>
                   <p className={styles.historialDesc}>{h.descripcion}</p>
-                  {h.datos.kilos && <p>Kilos: {h.datos.kilos}</p>}
+                  {h.datos.kilos && <p>Kilos: {parseFloat(h.datos.kilos.toFixed(1))}</p>}
+                  {h.datos.precioKg && <p>Kg a: ${h.datos.precioKg.toLocaleString('es-CO')}</p>}
                   {h.datos.total && <p>Total: ${h.datos.total.toLocaleString('es-CO')}</p>}
+                  {h.datos.deudaAntes !== undefined && <p>Debía antes: ${h.datos.deudaAntes.toLocaleString('es-CO')}</p>}
+                  {h.datos.deudaDespues !== undefined && <p>Debe ahora: ${h.datos.deudaDespues.toLocaleString('es-CO')}</p>}
                 </div>
               ))}
             </div>
@@ -459,6 +576,27 @@ export default function VentaPage() {
               <button className={styles.botonCancelar} onClick={() => setMostrarModalVentaRapida(false)}>Cancelar</button>
               <button className={styles.botonGuardar} onClick={registrarVentaRapida}>Guardar</button>
             </div>
+            <button className={styles.botonHistorial} onClick={abrirHistorialVentaRapida}>
+              📋 Ver Historial
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Historial Venta Rápida */}
+      {mostrarModalHistorialVentaRapida && (
+        <div className={styles.modal}>
+          <div className={styles.modalContenido}>
+            <h2>Historial Ventas Rápidas</h2>
+            <div className={styles.historialLista}>
+              {historialVentaRapida.map(vr => (
+                <div key={vr.id} className={`${styles.historialItem} ${styles.venta_rapida}`}>
+                  <p className={styles.historialFecha}>{vr.fecha.toLocaleDateString('es-CO')}</p>
+                  <p className={styles.historialDesc}>Venta rápida: ${vr.total.toLocaleString('es-CO')}</p>
+                </div>
+              ))}
+            </div>
+            <button className={styles.botonCerrar} onClick={() => setMostrarModalHistorialVentaRapida(false)}>Cerrar</button>
           </div>
         </div>
       )}

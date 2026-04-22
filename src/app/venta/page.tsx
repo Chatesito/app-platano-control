@@ -217,6 +217,17 @@ export default function VentaPage() {
       fecha: new Date(),
     });
 
+    // Si hay abono inicial, registrarlo como "último pago"
+    if (abono > 0) {
+      await db.historialClientes.add({
+        clienteId: clienteSeleccionado,
+        tipo: 'pago',
+        descripcion: `Pagó $${abono}`,
+        datos: { montoPagado: abono },
+        fecha: new Date(),
+      });
+    }
+
     // Actualizar deuda
     const deudaActual = await db.deudasClientes.where('clienteId').equals(clienteSeleccionado).first();
     if (deudaActual) {
@@ -327,13 +338,13 @@ export default function VentaPage() {
     cargarClientes();
   }
 
-  // Eliminar cliente
+  // Eliminar cliente (NO se borra el historial para mantener las ganancias)
   async function eliminarCliente() {
     if (!clienteSeleccionado) return;
 
     await db.clientes.delete(clienteSeleccionado);
     await db.deudasClientes.delete(clienteSeleccionado);
-    await db.historialClientes.where('clienteId').equals(clienteSeleccionado).delete();
+    // NO eliminamos el historial de pagos para que las ganancias se mantengan
 
     setClienteSeleccionado(null);
     setMostrarModalEliminar(false);

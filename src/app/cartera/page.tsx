@@ -57,10 +57,16 @@ export default function CarteraPage() {
     const pagosFiltrados = pagos.filter(p => new Date(p.fecha) >= inicio);
 
     const vendido = ventasFiltradas.reduce((acc, v) => {
-      if (v.abonoInicial && v.abonoInicial > 0) {
-        return acc + v.abonoInicial;
+      // Fiado sin abono inicial = 0 de ganancia (no han pagado nada todavía)
+      if (v.tipoPago === 'fiado' && (!v.abonoInicial || v.abonoInicial === 0)) {
+        return acc;
       }
-      return acc + v.total;
+      // Contado = suma todo
+      if (v.tipoPago === 'contado') {
+        return acc + v.total;
+      }
+      // Fiado con abono = suma el abono
+      return acc + (v.abonoInicial || 0);
     }, 0) + ventasRapidasFiltradas.reduce((acc, v) => acc + v.total, 0);
     
     const sumaPagos = pagosFiltrados.reduce((acc, p) => acc + (p.datos.montoPagado || 0), 0);
@@ -246,7 +252,7 @@ export default function CarteraPage() {
               ) : (
                 historialSemanas.map((r) => (
                   <div key={r.id} className={styles.historialItem}>
-                    <span className={styles.historialPeriodo}>{r.periodo}</span>
+                    <span className={styles.historialPeriodo}>{r.periodo}:</span>
                     <span className={`${styles.historialGanancia} ${r.ganancia >= 0 ? styles.positivo : styles.negativo}`}>
                       ${r.ganancia.toLocaleString('es-CO')}
                     </span>
@@ -269,7 +275,7 @@ export default function CarteraPage() {
               ) : (
                 historialMeses.map((r) => (
                   <div key={r.id} className={styles.historialItem}>
-                    <span className={styles.historialPeriodo}>{r.periodo}</span>
+                    <span className={styles.historialPeriodo}>{r.periodo}:</span>
                     <span className={`${styles.historialGanancia} ${r.ganancia >= 0 ? styles.positivo : styles.negativo}`}>
                       ${r.ganancia.toLocaleString('es-CO')}
                     </span>

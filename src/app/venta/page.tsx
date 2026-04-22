@@ -50,12 +50,12 @@ export default function VentaPage() {
   }, [clienteSeleccionado]);
 
   async function cargarClientes() {
-    const clientesDB = await db.clientes.orderBy('nombre').toArray();
-    setClientes(clientesDB);
+    const clientesDB = await db.clientes.toArray();
 
     const deudasMap = new Map<number, DeudaCliente>();
     const pagosMap = new Map<number, {monto: number, fecha: Date}>();
     
+    // Cargar deudas y últimos pagos primero
     for (const cliente of clientesDB) {
       if (cliente.id) {
         const deuda = await db.deudasClientes.where('clienteId').equals(cliente.id).first();
@@ -75,6 +75,15 @@ export default function VentaPage() {
         }
       }
     }
+    
+    // Ordenar clientes por deuda (mayor a menor)
+    const clientesOrdenados = clientesDB.sort((a, b) => {
+      const deudaA = a.id ? (deudasMap.get(a.id)?.totalVendido || 0) - (deudasMap.get(a.id)?.totalPagado || 0) : 0;
+      const deudaB = b.id ? (deudasMap.get(b.id)?.totalVendido || 0) - (deudasMap.get(b.id)?.totalPagado || 0) : 0;
+      return deudaB - deudaA;
+    });
+    
+    setClientes(clientesOrdenados);
     setDeudas(deudasMap);
     setUltimosPagos(pagosMap);
   }
@@ -231,6 +240,7 @@ export default function VentaPage() {
     setVentaAbono('');
     setMostrarModalVenta(false);
     cargarDeudaCliente(clienteSeleccionado);
+    cargarClientes(); // Actualizar orden
     cargarUltimoPago(clienteSeleccionado);
   }
 
@@ -276,6 +286,7 @@ export default function VentaPage() {
     setMostrarModalPago(false);
     cargarDeudaCliente(clienteSeleccionado);
     cargarUltimoPago(clienteSeleccionado);
+    cargarClientes(); // Actualizar orden
   }
 
   // Editar cliente

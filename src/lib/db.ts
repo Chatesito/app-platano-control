@@ -70,6 +70,14 @@ export interface VentaRapida {
   fecha: Date;
 }
 
+export interface RegistroGanancia {
+  id?: number;
+  tipo: 'semana' | 'mes';
+  periodo: string; // ej: "16-22 Jun" o "Junio"
+  ganancia: number;
+  fechaCierre: Date;
+}
+
 // Base de datos
 export class AppDatabase extends Dexie {
   clientes!: Table<Cliente, number>;
@@ -79,10 +87,11 @@ export class AppDatabase extends Dexie {
   deudasClientes!: Table<DeudaCliente, number>;
   historialClientes!: Table<HistorialCliente, number>;
   ventasRapidas!: Table<VentaRapida, number>;
+  registroGanancias!: Table<RegistroGanancia, number>;
 
   constructor() {
     super('AppPlatanoControl');
-    this.version(2).stores({
+    this.version(3).stores({
       clientes: '++id, nombre, createdAt',
       compras: '++id, fecha',
       preciosKg: '++id, fechaActualizacion',
@@ -90,6 +99,7 @@ export class AppDatabase extends Dexie {
       deudasClientes: 'clienteId, ultimaFecha',
       historialClientes: '++id, clienteId, tipo, fecha',
       ventasRapidas: '++id, fecha',
+      registroGanancias: '++id, tipo, fechaCierre',
     });
   }
 }

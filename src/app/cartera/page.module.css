@@ -56,6 +56,32 @@
   color: #f44336;
 }
 
+.statCardClickable {
+  flex: 1;
+  background-color: #333;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.statCardClickable:active {
+  background-color: #444;
+}
+
+.statCardFullClickable {
+  background-color: #333;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.statCardFullClickable:active {
+  background-color: #444;
+}
+
 .positivo {
   color: #4caf50;
 }
@@ -101,4 +127,95 @@
   font-size: 1.2rem;
   color: #4caf50;
   margin-top: 2rem;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContenido {
+  background-color: #333;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  color: white;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modalContenido h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.botonCerrar {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #2d5a27;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* Historial */
+.historialLista {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+.historialItem {
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background-color: #222;
+  border-left: 4px solid;
+}
+
+.historialItem.compra {
+  border-left-color: #ff9800;
+}
+
+.historialItem.venta {
+  border-left-color: #2196f3;
+}
+
+.historialItem.venta_rapida {
+  border-left-color: #9c27b0;
+}
+
+.historialFecha {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.historialDesc {
+  font-size: 1rem;
+  color: white;
+}
+
+.historialPeriodo {
+  font-size: 1rem;
+  color: white;
+}
+
+.historialGanancia {
+  font-size: 1.2rem;
+  font-weight: bold;
 }

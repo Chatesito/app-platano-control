@@ -250,6 +250,12 @@ export default function VentaPage() {
     const abono = ventaAbono ? parseInt(ventaAbono) : 0;
     const pendiente = total - abono;
 
+    // Validar que el abono no exceda el total
+    if (abono > total) {
+      alert('El abono no puede exceder el total de la venta');
+      return;
+    }
+
     // Guardar venta
     await db.ventas.add({
       clienteId: clienteSeleccionado,
@@ -336,6 +342,20 @@ export default function VentaPage() {
   // Editar cliente
   async function editarCliente() {
     if (!clienteSeleccionado || !editarNombre.trim()) return;
+
+    // Validar que el nombre solo tenga letras y espacios
+    const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!soloLetras.test(editarNombre.trim())) {
+      alert('El nombre solo debe contener letras');
+      return;
+    }
+
+    // Validar que el teléfono solo tenga números
+    const soloNumeros = /^[0-9]*$/;
+    if (editarTelefono.trim() && !soloNumeros.test(editarTelefono.trim())) {
+      alert('El teléfono solo debe contener números');
+      return;
+    }
 
     const cliente = await db.clientes.get(clienteSeleccionado);
     if (!cliente) return;

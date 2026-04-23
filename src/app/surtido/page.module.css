@@ -96,3 +96,131 @@
   text-align: center;
   padding: 2rem;
 }
+
+.subtitulo {
+  font-size: 1.2rem;
+  margin: 2rem 0 1rem 0;
+  color: white;
+}
+
+.sinDatos {
+  text-align: center;
+  color: #888;
+  font-size: 1rem;
+}
+
+/* Historial de surtidos */
+.historial {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.surtidoItem {
+  background-color: #333;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.surtidoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.surtidoFecha {
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.surtidoEstado {
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.surtidoEstado.pagado {
+  background-color: #4caf50;
+  color: white;
+}
+
+.surtidoEstado.pendiente {
+  background-color: #f44336;
+  color: white;
+}
+
+.surtidoDetalle {
+  font-size: 0.95rem;
+  color: white;
+  margin: 0.25rem 0;
+}
+
+.botonPago {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContenido {
+  background-color: #333;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  color: white;
+}
+
+.modalContenido h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.modalBotones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.botonCancelar,
+.botonGuardar {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+}
+
+.botonCancelar {
+  background-color: #666;
+}
+
+.botonGuardar {
+  background-color: #4caf50;
+}

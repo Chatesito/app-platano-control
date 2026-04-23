@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { db, Compra } from '@/lib/db';
 import styles from './page.module.css';
 
@@ -119,6 +120,7 @@ export default function RegistrarSurtidoPage() {
 
   return (
     <main className={styles.main}>
+      <Link href="/" className={styles.botonVolver}>← Volver</Link>
       <h1 className={styles.titulo}>Registrar Surtido</h1>
 
       {/* Formulario */}

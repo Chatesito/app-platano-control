@@ -321,3 +321,17 @@
   box-sizing: border-box;
   margin-bottom: 1rem;
 }
+
+.botonVolver {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  text-decoration: none;
+}

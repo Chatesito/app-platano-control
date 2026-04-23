@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { db, Cliente, DeudaCliente, HistorialCliente, PrecioKg, HistorialTipo, VentaRapida } from '@/lib/db';
 import styles from './page.module.css';
 
@@ -468,6 +469,7 @@ export default function VentaPage() {
 
   return (
     <main className={styles.main}>
+      <Link href="/" className={styles.botonVolver}>← Volver</Link>
       <h1 className={styles.titulo}>Registrar Venta</h1>
 
       {/* Botones principales */}

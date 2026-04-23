@@ -36,7 +36,11 @@ export default function VentaPage() {
 
   // Historial
   const [historial, setHistorial] = useState<HistorialCliente[]>([]);
+  const [historialFiltrado, setHistorialFiltrado] = useState<HistorialCliente[]>([]);
   const [historialVentaRapida, setHistorialVentaRapida] = useState<VentaRapida[]>([]);
+
+  // Filtro por mes
+  const [filtroMes, setFiltroMes] = useState('');
 
   useEffect(() => {
     cargarClientes();
@@ -48,6 +52,20 @@ export default function VentaPage() {
       cargarUltimoPago(clienteSeleccionado);
     }
   }, [clienteSeleccionado]);
+
+  // Filtrar historial por mes
+  useEffect(() => {
+    if (!filtroMes) {
+      setHistorialFiltrado(historial);
+    } else {
+      const [year, month] = filtroMes.split('-').map(Number);
+      const filtrado = historial.filter(h => {
+        const fecha = new Date(h.fecha);
+        return fecha.getFullYear() === year && fecha.getMonth() === month - 1;
+      });
+      setHistorialFiltrado(filtrado);
+    }
+  }, [filtroMes, historial]);
 
   async function cargarClientes() {
     const clientesDB = await db.clientes.toArray();
@@ -580,8 +598,14 @@ export default function VentaPage() {
         <div className={styles.modal}>
           <div className={styles.modalContenido}>
             <h2>Historial</h2>
+            <input
+              type="month"
+              className={styles.filtroMes}
+              value={filtroMes}
+              onChange={(e) => setFiltroMes(e.target.value)}
+            />
             <div className={styles.historialLista}>
-              {historial.map(h => (
+              {historialFiltrado.map(h => (
                 <div key={h.id} className={`${styles.historialItem} ${styles[h.tipo]}`}>
                   <p className={styles.historialFecha}>{h.fecha.toLocaleDateString('es-CO')}</p>
                   <p className={styles.historialDesc}>{h.descripcion}</p>

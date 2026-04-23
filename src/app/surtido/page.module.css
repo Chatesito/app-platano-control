@@ -109,6 +109,18 @@
   font-size: 1rem;
 }
 
+.filtroMes {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background-color: #222;
+  color: white;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
 /* Historial de surtidos */
 .historial {
   display: flex;
@@ -223,4 +235,15 @@
 
 .botonGuardar {
   background-color: #4caf50;
+}
+
+.inputModal {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.5rem;
+  border: 2px solid #555;
+  border-radius: 8px;
+  background-color: #222;
+  color: white;
+  box-sizing: border-box;
 }

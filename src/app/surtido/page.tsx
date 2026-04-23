@@ -6,11 +6,15 @@ import styles from './page.module.css';
 
 export default function RegistrarSurtidoPage() {
   const [compras, setCompras] = useState<Compra[]>([]);
+  const [comprasFiltradas, setComprasFiltradas] = useState<Compra[]>([]);
   const [kilos, setKilos] = useState('');
   const [unidad, setUnidad] = useState<'kg' | 'ton'>('kg');
   const [costoTotal, setCostoTotal] = useState('');
   const [pagadoProveedor, setPagadoProveedor] = useState('');
   const [guardado, setGuardado] = useState(false);
+
+  // Filtro por mes
+  const [filtroMes, setFiltroMes] = useState('');
 
   // Modal states
   const [mostrarModalPago, setMostrarModalPago] = useState(false);
@@ -20,6 +24,20 @@ export default function RegistrarSurtidoPage() {
   useEffect(() => {
     cargarCompras();
   }, []);
+
+  // Filtrar por mes
+  useEffect(() => {
+    if (!filtroMes) {
+      setComprasFiltradas(compras);
+    } else {
+      const [year, month] = filtroMes.split('-').map(Number);
+      const filtradas = compras.filter(c => {
+        const fecha = new Date(c.fecha);
+        return fecha.getFullYear() === year && fecha.getMonth() === month - 1;
+      });
+      setComprasFiltradas(filtradas);
+    }
+  }, [filtroMes, compras]);
 
   async function cargarCompras() {
     const todas = await db.compras.orderBy('fecha').reverse().toArray();
@@ -160,11 +178,18 @@ export default function RegistrarSurtidoPage() {
       {/* Historial de surtidos */}
       <h2 className={styles.subtitulo}>Historial de Surtidos</h2>
       
-      {compras.length === 0 ? (
+      <input
+        type="month"
+        className={styles.filtroMes}
+        value={filtroMes}
+        onChange={(e) => setFiltroMes(e.target.value)}
+      />
+      
+      {comprasFiltradas.length === 0 ? (
         <p className={styles.sinDatos}>No hay surtidos registrados</p>
       ) : (
         <div className={styles.historial}>
-          {compras.map(compra => {
+          {comprasFiltradas.map(compra => {
             const pagado = compra.costoTotal - compra.saldoProveedor;
             const pendiente = compra.saldoProveedor;
             const pagadoCompleto = pendiente === 0;
@@ -204,7 +229,7 @@ export default function RegistrarSurtidoPage() {
           <div className={styles.modalContenido} onClick={e => e.stopPropagation()}>
             <h2>Añadir Pago</h2>
             <input 
-              className={styles.input} 
+              className={styles.inputModal} 
               type="number" 
               placeholder="Monto ($)" 
               value={pagoMonto} 

@@ -6,6 +6,7 @@ import styles from './HeaderPrecio.module.css';
 
 export default function HeaderPrecio() {
   const [precio, setPrecio] = useState<number | null>(null);
+  const [precioId, setPrecioId] = useState<number | null>(null);
   const [editando, setEditando] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
@@ -18,6 +19,7 @@ export default function HeaderPrecio() {
     const ultimoPrecio = await db.preciosKg.orderBy('fechaActualizacion').last();
     if (ultimoPrecio) {
       setPrecio(ultimoPrecio.valor);
+      setPrecioId(ultimoPrecio.id);
     }
   }
 
@@ -31,10 +33,19 @@ export default function HeaderPrecio() {
       return;
     }
 
-    await db.preciosKg.add({
-      valor: nuevoPrecio,
-      fechaActualizacion: new Date(),
-    });
+    // Si ya existe un registro, actualizarlo; si no, crear uno nuevo
+    if (precioId) {
+      await db.preciosKg.update(precioId, {
+        valor: nuevoPrecio,
+        fechaActualizacion: new Date(),
+      });
+    } else {
+      const id = await db.preciosKg.add({
+        valor: nuevoPrecio,
+        fechaActualizacion: new Date(),
+      });
+      setPrecioId(id);
+    }
 
     setPrecio(nuevoPrecio);
     setEditando(false);

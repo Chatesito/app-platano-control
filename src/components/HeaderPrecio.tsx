@@ -19,7 +19,7 @@ export default function HeaderPrecio() {
     const ultimoPrecio = await db.preciosKg.orderBy('fechaActualizacion').last();
     if (ultimoPrecio) {
       setPrecio(ultimoPrecio.valor);
-      setPrecioId(ultimoPrecio.id);
+      setPrecioId(ultimoPrecio.id ?? null);
     }
   }
 

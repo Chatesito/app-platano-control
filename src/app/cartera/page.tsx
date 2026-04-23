@@ -70,9 +70,8 @@ export default function CarteraPage() {
     }, 0) + ventasRapidasFiltradas.reduce((acc, v) => acc + v.total, 0);
     
     const sumaPagos = pagosFiltrados.reduce((acc, p) => acc + (p.datos.montoPagado || 0), 0);
-    const invertido = comprasFiltradas.reduce((acc, c) => acc + c.costoTotal, 0);
     
-    return (vendido + sumaPagos) - invertido;
+    return vendido + sumaPagos;
   }
 
   // Función para actualizar o crear registro de ganancia
@@ -164,6 +163,9 @@ export default function CarteraPage() {
   const totalDeudas = deudas.reduce((acc, d) => acc + (d.totalVendido - d.totalPagado), 0);
   const numeroDeudores = deudas.filter(d => d.totalVendido > d.totalPagado).length;
   
+  // Deuda a proveedores (surtidos pendientes)
+  const deudaProveedores = compras.reduce((acc, c) => acc + c.saldoProveedor, 0);
+  
   const hoy = new Date();
   const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   const inicioSemana = getInicioSemana(hoy);
@@ -188,6 +190,11 @@ export default function CarteraPage() {
           <div className={styles.statCardFull}>
             <p className={styles.statLabel}>Dinero en la Calle</p>
             <p className={styles.statValueRojo}>${totalDeudas.toLocaleString('es-CO')}</p>
+          </div>
+
+          <div className={styles.statCardFull}>
+            <p className={styles.statLabel}>Deuda de Surtido</p>
+            <p className={styles.statValueRojo}>${deudaProveedores.toLocaleString('es-CO')}</p>
           </div>
 
           <h2 className={styles.subtitulo}>Ganancias</h2>

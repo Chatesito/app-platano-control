@@ -419,6 +419,12 @@ export default function VentaPage() {
 
     const monto = parseInt(ventaRapidaMonto);
 
+    // Validar que sea mayor a 0
+    if (isNaN(monto) || monto <= 0) {
+      alert('El monto debe ser mayor a 0');
+      return;
+    }
+
     await db.ventasRapidas.add({
       total: monto,
       fecha: new Date(),

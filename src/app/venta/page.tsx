@@ -357,6 +357,15 @@ export default function VentaPage() {
   async function eliminarCliente() {
     if (!clienteSeleccionado) return;
 
+    // Verificar si tiene deuda
+    const deuda = await db.deudasClientes.where('clienteId').equals(clienteSeleccionado).first();
+    const tieneDeuda = deuda && (deuda.totalVendido - deuda.totalPagado) > 0;
+
+    if (tieneDeuda) {
+      const confirmado = confirm("Este cliente aún tiene deudas. ¿Seguro que quieres eliminarlo?");
+      if (!confirmado) return;
+    }
+
     await db.clientes.delete(clienteSeleccionado);
     await db.deudasClientes.delete(clienteSeleccionado);
     // NO eliminamos el historial de pagos para que las ganancias se mantengan

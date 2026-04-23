@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# App Platano Control
 
-## Getting Started
+Aplicación móvil 100% offline para gestionar la venta de plátano. Diseño específico para usarse bajo el sol, con botones grandes y interfaz oscura.
 
-First, run the development server:
+## Características
+
+- **100% Offline** — Sin internet, sin nube, todo funciona local
+- **Registrar Surtido** — Compras al proveedor con control de deuda
+- **Registrar Ventas** — Clientes, kilos, fiado/contado, abonos
+- **Cartera** — Dinero en la calle, deuda de surtido, ganancias (hoy/semana/mes)
+- **Historiales** — Filtrables por mes
+
+## Tech Stack
+
+- Next.js + TypeScript
+- Dexie.js (IndexedDB)
+- Capacitor (APK Android)
+
+## Desarrollo
 
 ```bash
+# Instalar dependencias
+npm install
+
+# Desarrollo local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build producción
+npm run build
+
+# Generar APK
+npx cap sync
+cd android && ./gradlew.bat assembleDebug
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## APK
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El archivo compilado está en `App Platano Control.apk` o en `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Instalación en Android
 
-## Learn More
+1. Transferir el APK al teléfono
+2. En Ajustes → Seguridad, habilitar "Instalar aplicaciones de fuentes desconocidas"
+3. Abrir el APK e instalar
 
-To learn more about Next.js, take a look at the following resources:
+## Notas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- El precio del kg se configura tocando el valor en el header (aparece en todas las páginas)
+- Las ganancias no incluyen el costo de los surtidos (se muestra por separado en "Deuda de Surtido")
+- Todo queda guardado en el dispositivo — no se borra al cerrar la app

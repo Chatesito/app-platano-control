@@ -39,9 +39,11 @@ export default function VentaPage() {
   const [historial, setHistorial] = useState<HistorialCliente[]>([]);
   const [historialFiltrado, setHistorialFiltrado] = useState<HistorialCliente[]>([]);
   const [historialVentaRapida, setHistorialVentaRapida] = useState<VentaRapida[]>([]);
+  const [historialVentaRapidaFiltrado, setHistorialVentaRapidaFiltrado] = useState<VentaRapida[]>([]);
 
-  // Filtro por mes
+  // Filtro por mes (separados para cada historial)
   const [filtroMes, setFiltroMes] = useState('');
+  const [filtroMesVentaRapida, setFiltroMesVentaRapida] = useState('');
 
   useEffect(() => {
     cargarClientes();
@@ -67,6 +69,20 @@ export default function VentaPage() {
       setHistorialFiltrado(filtrado);
     }
   }, [filtroMes, historial]);
+
+  // Filtrar ventas rápida por mes
+  useEffect(() => {
+    if (!filtroMesVentaRapida) {
+      setHistorialVentaRapidaFiltrado(historialVentaRapida);
+    } else {
+      const [year, month] = filtroMesVentaRapida.split('-').map(Number);
+      const filtrado = historialVentaRapida.filter(vr => {
+        const fecha = new Date(vr.fecha);
+        return fecha.getFullYear() === year && fecha.getMonth() === month - 1;
+      });
+      setHistorialVentaRapidaFiltrado(filtrado);
+    }
+  }, [filtroMesVentaRapida, historialVentaRapida]);
 
   async function cargarClientes() {
     const clientesDB = await db.clientes.toArray();
@@ -686,8 +702,14 @@ export default function VentaPage() {
         <div className={styles.modal}>
           <div className={styles.modalContenido}>
             <h2>Historial Ventas Rápidas</h2>
+            <input
+              type="month"
+              className={styles.filtroMes}
+              value={filtroMesVentaRapida}
+              onChange={(e) => setFiltroMesVentaRapida(e.target.value)}
+            />
             <div className={styles.historialLista}>
-              {historialVentaRapida.map(vr => (
+              {historialVentaRapidaFiltrado.map(vr => (
                 <div key={vr.id} className={`${styles.historialItem} ${styles.venta_rapida}`}>
                   <p className={styles.historialFecha}>{vr.fecha.toLocaleDateString('es-CO')}</p>
                   <p className={styles.historialDesc}>Venta rápida: ${vr.total.toLocaleString('es-CO')}</p>

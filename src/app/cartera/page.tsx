@@ -22,6 +22,10 @@ export default function CarteraPage() {
   const [mostrarModalSemana, setMostrarModalSemana] = useState(false);
   const [mostrarModalMes, setMostrarModalMes] = useState(false);
 
+  // Filtros por mes
+  const [filtroMesSemana, setFiltroMesSemana] = useState('');
+  const [filtroMesMes, setFiltroMesMes] = useState('');
+
   useEffect(() => {
     cargarDatos();
   }, []);
@@ -180,6 +184,23 @@ export default function CarteraPage() {
   const historialSemanas = registrosGanancias.filter(r => r.tipo === 'semana').sort((a, b) => new Date(b.fechaCierre).getTime() - new Date(a.fechaCierre).getTime());
   const historialMeses = registrosGanancias.filter(r => r.tipo === 'mes').sort((a, b) => new Date(b.fechaCierre).getTime() - new Date(a.fechaCierre).getTime());
 
+  // Filtrar por mes
+  const historialSemanasFiltrado = filtroMesSemana 
+    ? historialSemanas.filter(r => {
+        const [year, month] = filtroMesSemana.split('-').map(Number);
+        const fecha = new Date(r.fechaCierre);
+        return fecha.getFullYear() === year && fecha.getMonth() === month - 1;
+      })
+    : historialSemanas;
+
+  const historialMesesFiltrado = filtroMesMes
+    ? historialMeses.filter(r => {
+        const [year, month] = filtroMesMes.split('-').map(Number);
+        const fecha = new Date(r.fechaCierre);
+        return fecha.getFullYear() === year && fecha.getMonth() === month - 1;
+      })
+    : historialMeses;
+
   return (
     <main className={styles.main}>
       <Link href="/" className={styles.botonVolver}>← Volver</Link>
@@ -255,11 +276,17 @@ export default function CarteraPage() {
         <div className={styles.modal} onClick={() => setMostrarModalSemana(false)}>
           <div className={styles.modalContenido} onClick={e => e.stopPropagation()}>
             <h2>Registro Semanal</h2>
+            <input
+              type="month"
+              className={styles.filtroMes}
+              value={filtroMesSemana}
+              onChange={(e) => setFiltroMesSemana(e.target.value)}
+            />
             <div className={styles.historialLista}>
-              {historialSemanas.length === 0 ? (
+              {historialSemanasFiltrado.length === 0 ? (
                 <p className={styles.sinDeuda}>No hay semanas registradas</p>
               ) : (
-                historialSemanas.map((r) => (
+                historialSemanasFiltrado.map((r) => (
                   <div key={r.id} className={styles.historialItem}>
                     <span className={styles.historialPeriodo}>{r.periodo}:</span>
                     <span className={`${styles.historialGanancia} ${r.ganancia >= 0 ? styles.positivo : styles.negativo}`}>
@@ -278,11 +305,17 @@ export default function CarteraPage() {
         <div className={styles.modal} onClick={() => setMostrarModalMes(false)}>
           <div className={styles.modalContenido} onClick={e => e.stopPropagation()}>
             <h2>Registro Mensual</h2>
+            <input
+              type="month"
+              className={styles.filtroMes}
+              value={filtroMesMes}
+              onChange={(e) => setFiltroMesMes(e.target.value)}
+            />
             <div className={styles.historialLista}>
-              {historialMeses.length === 0 ? (
+              {historialMesesFiltrado.length === 0 ? (
                 <p className={styles.sinDeuda}>No hay meses registrados</p>
               ) : (
-                historialMeses.map((r) => (
+                historialMesesFiltrado.map((r) => (
                   <div key={r.id} className={styles.historialItem}>
                     <span className={styles.historialPeriodo}>{r.periodo}:</span>
                     <span className={`${styles.historialGanancia} ${r.ganancia >= 0 ? styles.positivo : styles.negativo}`}>

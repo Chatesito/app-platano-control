@@ -178,6 +178,68 @@ export default function VentaPage() {
     setHistorial(h);
   }
 
+  // Eliminar registro del historial
+  async function eliminarRegistroHistorial(id: number) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    
+    // Obtener el registro antes de eliminarlo
+    const registro = await db.historialClientes.get(id);
+    if (!registro) return;
+
+    // Si es una venta ('compra'), actualizar la deuda del cliente Y eliminar de db.ventas
+    if (registro.tipo === 'compra' && registro.clienteId) {
+      const ventaTotal = registro.datos.total || 0;
+      const ventaAbono = registro.datos.abono || 0;
+      
+      // Buscar y eliminar la venta en db.ventas (por cliente y fecha cercana)
+      const ventasCliente = await db.ventas.where('clienteId').equals(registro.clienteId).toArray();
+      const fechaRegistro = new Date(registro.fecha).getTime();
+      // Buscar venta con fecha dentro del mismo minuto
+      const ventaAEliminar = ventasCliente.find(v => {
+        const diff = Math.abs(new Date(v.fecha).getTime() - fechaRegistro);
+        return diff < 60000; // menos de 1 minuto de diferencia
+      });
+      
+      if (ventaAEliminar) {
+        await db.ventas.delete(ventaAEliminar.id!);
+      }
+      
+      // Obtener la deuda actual del cliente
+      let deuda = await db.deudasClientes.where('clienteId').equals(registro.clienteId).first();
+      
+      if (deuda) {
+        const nuevoTotalVendido = deuda.totalVendido - ventaTotal;
+        const nuevoTotalPagado = deuda.totalPagado - ventaAbono;
+        
+        if (nuevoTotalVendido <= 0) {
+          // Si no hay más deuda, crear registro con 0 (no eliminar para poder seguir operando)
+          await db.deudasClientes.update(deuda.clienteId, {
+            totalVendido: 0,
+            totalPagado: 0,
+            ultimaFecha: new Date(),
+          });
+        } else {
+          // Actualizar la deuda
+          await db.deudasClientes.update(deuda.clienteId, {
+            totalVendido: nuevoTotalVendido,
+            totalPagado: Math.max(0, nuevoTotalPagado),
+            ultimaFecha: new Date(),
+          });
+        }
+      }
+    }
+
+    // Eliminar el registro del historial
+    await db.historialClientes.delete(id);
+    
+    // Recargar historial y deuda
+    if (clienteSeleccionado) {
+      cargarHistorial(clienteSeleccionado);
+      cargarDeudaCliente(clienteSeleccionado);
+      cargarUltimoPago(clienteSeleccionado);
+    }
+  }
+
   async function cargarHistorialVentaRapida() {
     const h = await db.ventasRapidas.orderBy('fecha').reverse().toArray();
     setHistorialVentaRapida(h);
@@ -651,13 +713,21 @@ export default function VentaPage() {
             <div className={styles.historialLista}>
               {historialFiltrado.map(h => (
                 <div key={h.id} className={`${styles.historialItem} ${styles[h.tipo]}`}>
-                  <p className={styles.historialFecha}>{h.fecha.toLocaleDateString('es-CO')}</p>
-                  <p className={styles.historialDesc}>{h.descripcion}</p>
-                  {h.datos.kilos && <p>Kilos: {parseFloat(h.datos.kilos.toFixed(1))}</p>}
-                  {h.datos.precioKg && <p>Kg a: ${h.datos.precioKg.toLocaleString('es-CO')}</p>}
-                  {h.datos.total && <p>Total: ${h.datos.total.toLocaleString('es-CO')}</p>}
-                  {h.datos.deudaAntes !== undefined && <p>Debía antes: ${h.datos.deudaAntes.toLocaleString('es-CO')}</p>}
-                  {h.datos.deudaDespues !== undefined && <p>Debe ahora: ${h.datos.deudaDespues.toLocaleString('es-CO')}</p>}
+                  <div>
+                    <p className={styles.historialFecha}>{h.fecha.toLocaleDateString('es-CO')}</p>
+                    <p className={styles.historialDesc}>{h.descripcion}</p>
+                    {h.datos.kilos && <p>Kilos: {parseFloat(h.datos.kilos.toFixed(1))}</p>}
+                    {h.datos.precioKg && <p>Kg a: ${h.datos.precioKg.toLocaleString('es-CO')}</p>}
+                    {h.datos.total && <p>Total: ${h.datos.total.toLocaleString('es-CO')}</p>}
+                    {h.datos.deudaAntes !== undefined && <p>Debía antes: ${h.datos.deudaAntes.toLocaleString('es-CO')}</p>}
+                    {h.datos.deudaDespues !== undefined && <p>Debe ahora: ${h.datos.deudaDespues.toLocaleString('es-CO')}</p>}
+                  </div>
+                  <button 
+                    className={styles.botonEliminarRegistro}
+                    onClick={() => eliminarRegistroHistorial(h.id!)}
+                  >
+                    🗑️
+                  </button>
                 </div>
               ))}
             </div>

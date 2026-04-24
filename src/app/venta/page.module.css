@@ -281,6 +281,9 @@
   margin-bottom: 0.5rem;
   background-color: #222;
   border-left: 4px solid;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .historialItem.compra {
@@ -334,4 +337,15 @@
   cursor: pointer;
   margin-bottom: 1rem;
   text-decoration: none;
+}
+
+.botonEliminarRegistro {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
 }

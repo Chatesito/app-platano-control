@@ -142,6 +142,12 @@
   background-color: #1e3d1a;
 }
 
+/* Botón eliminar cliente */
+.botonEliminarCliente {
+  background-color: #db0e0ea2;
+  color: #999;
+}
+
 /* Modal */
 .modal {
   position: fixed;
@@ -340,11 +346,11 @@
 }
 
 .botonEliminarRegistro {
-  background-color: #f44336;
-  color: white;
+  background-color: #555;
+  color: #aaa;
   border: none;
   border-radius: 8px;
-  padding: 0.5rem;
+  padding: 0.3rem;
   font-size: 1.2rem;
   cursor: pointer;
   margin-left: 0.5rem;

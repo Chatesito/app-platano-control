@@ -209,7 +209,11 @@ export default function VentaPage() {
       
       if (deuda) {
         const nuevoTotalVendido = deuda.totalVendido - ventaTotal;
-        const nuevoTotalPagado = deuda.totalPagado - ventaAbono;
+        // Clamp: totalPagado nunca puede superar a totalVendido (no existen deudas negativas)
+        const nuevoTotalPagado = Math.min(
+          Math.max(0, deuda.totalPagado - ventaAbono),
+          Math.max(0, nuevoTotalVendido)
+        );
         
         if (nuevoTotalVendido <= 0) {
           // Si no hay más deuda, crear registro con 0 (no eliminar para poder seguir operando)
@@ -605,7 +609,7 @@ export default function VentaPage() {
                     <div className={styles.accionesRow}>
                       <button className={styles.botonAccion} onClick={abrirEditarCliente}>✏️</button>
                       <button className={styles.botonAccion} onClick={abrirHistorial}>📋</button>
-                      <button className={styles.botonAccion} onClick={() => setMostrarModalEliminar(true)}>🗑️</button>
+                      <button className={styles.botonEliminarCliente} onClick={() => setMostrarModalEliminar(true)}>🗑️</button>
                     </div>
                   </div>
                 </div>
@@ -726,7 +730,7 @@ export default function VentaPage() {
                     className={styles.botonEliminarRegistro}
                     onClick={() => eliminarRegistroHistorial(h.id!)}
                   >
-                    🗑️
+                    ✕
                   </button>
                 </div>
               ))}

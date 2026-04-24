@@ -110,6 +110,12 @@ export default function RegistrarSurtidoPage() {
     setMostrarModalPago(true);
   }
 
+  async function eliminarSurtido(id: number) {
+    if (!confirm('¿Eliminar este surtido?')) return;
+    await db.compras.delete(id);
+    cargarCompras();
+  }
+
   if (guardado) {
     return (
       <main className={styles.main}>
@@ -205,6 +211,12 @@ export default function RegistrarSurtidoPage() {
                   <span className={`${styles.surtidoEstado} ${pagadoCompleto ? styles.pagado : styles.pendiente}`}>
                     {pagadoCompleto ? 'Pagado' : 'Pendiente'}
                   </span>
+                  <button 
+                    className={styles.botonEliminar}
+                    onClick={() => compra.id && eliminarSurtido(compra.id)}
+                  >
+                    ✕
+                  </button>
                 </div>
                 <p className={styles.surtidoDetalle}>Kg: {compra.kilos.toLocaleString('es-CO')}</p>
                 <p className={styles.surtidoDetalle}>Costo: ${compra.costoTotal.toLocaleString('es-CO')}</p>

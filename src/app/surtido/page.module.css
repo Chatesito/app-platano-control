@@ -138,6 +138,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
@@ -167,6 +168,17 @@
   font-size: 0.95rem;
   color: white;
   margin: 0.25rem 0;
+}
+
+.botonEliminar {
+  background-color: #555;
+  color: #aaa;
+  border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .botonPago {

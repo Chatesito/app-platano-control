@@ -249,6 +249,12 @@ export default function VentaPage() {
     setHistorialVentaRapida(h);
   }
 
+  async function eliminarVentaRapida(id: number) {
+    if (!confirm('¿Eliminar esta venta?')) return;
+    await db.ventasRapidas.delete(id);
+    await cargarHistorialVentaRapida();
+  }
+
   // Crear cliente
   async function crearCliente() {
     if (!nuevoClienteNombre.trim()) return;
@@ -785,8 +791,16 @@ export default function VentaPage() {
             <div className={styles.historialLista}>
               {historialVentaRapidaFiltrado.map(vr => (
                 <div key={vr.id} className={`${styles.historialItem} ${styles.venta_rapida}`}>
-                  <p className={styles.historialFecha}>{vr.fecha.toLocaleDateString('es-CO')}</p>
-                  <p className={styles.historialDesc}>Venta rápida: ${vr.total.toLocaleString('es-CO')}</p>
+                  <div className={styles.historialInfo}>
+                    <p className={styles.historialFecha}>{vr.fecha.toLocaleDateString('es-CO')}</p>
+                    <p className={styles.historialDesc}>Venta rápida: ${vr.total.toLocaleString('es-CO')}</p>
+                  </div>
+                  <button 
+                    className={styles.botonEliminarRegistro}
+                    onClick={() => vr.id && eliminarVentaRapida(vr.id)}
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
             </div>

@@ -313,6 +313,10 @@
   color: #888;
 }
 
+.historialInfo {
+  flex: 1;
+}
+
 .historialDesc {
   font-size: 1rem;
   font-weight: bold;

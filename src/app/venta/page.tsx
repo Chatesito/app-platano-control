@@ -233,6 +233,24 @@ export default function VentaPage() {
       }
     }
 
+    // Si es un pago ('pago'), revertir el monto a la deuda
+    if (registro.tipo === 'pago' && registro.clienteId) {
+      const montoPagado = registro.datos.montoPagado || 0;
+      
+      // Obtener la deuda actual del cliente
+      let deuda = await db.deudasClientes.where('clienteId').equals(registro.clienteId).first();
+      
+      if (deuda) {
+        // Sumar el monto pagado a la deuda (revertir el pago)
+        const nuevoTotalPagado = Math.max(0, deuda.totalPagado - montoPagado);
+        
+        await db.deudasClientes.update(deuda.clienteId, {
+          totalPagado: nuevoTotalPagado,
+          ultimaFecha: new Date(),
+        });
+      }
+    }
+
     // Eliminar el registro del historial
     await db.historialClientes.delete(id);
     

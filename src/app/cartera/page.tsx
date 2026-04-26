@@ -128,17 +128,39 @@ export default function CarteraPage() {
     // Simply keep it as is - it will be in the historial
   }
 
+  // Verificar si hoy es primer día de la semana (lunes) - para cerrar la semana anterior
+  function esPrimerDiaSemana(): boolean {
+    const hoy = new Date();
+    return hoy.getDay() === 1; // Lunes = 1
+  }
+
+  // Verificar si hoy es primer día del mes - para cerrar el mes anterior
+  function esPrimerDiaMes(): boolean {
+    const hoy = new Date();
+    return hoy.getDate() === 1;
+  }
+
   async function cargarDatos() {
     setCargando(true);
     
-    // Actualizar registro de la semana actual
-    await actualizarRegistroGanancia('semana');
-    await actualizarRegistroGanancia('mes');
-    
-    // Cargar datos para mostrar
+    // Primero cargar todos los datos desde la DB
     const todasDeudas = await db.deudasClientes.toArray();
     const todasCompras = await db.compras.toArray();
     const todasVentas = await db.ventas.toArray();
+    const todasVentasRapidas = await db.ventasRapidas.toArray();
+    const todosHistorial = await db.historialClientes.toArray();
+    const todosRegistros = await db.registroGanancias.toArray();
+    
+    setDeudas(todasDeudas);
+    setCompras(todasCompras);
+    setVentas(todasVentas);
+    setVentasRapidas(todasVentasRapidas);
+    setHistorialPagos(todosHistorial.filter(h => h.tipo === 'pago'));
+    setRegistrosGanancias(todosRegistros);
+    
+    // AHORA sí, actualizar el registro del período actual (ya con los datos cargados)
+    await actualizarRegistroGanancia('semana');
+    await actualizarRegistroGanancia('mes');
     const ventasRapidasDB = await db.ventasRapidas.toArray();
     const registros = await db.registroGanancias.toArray();
     const pagos = await db.historialClientes.filter(h => h.tipo === 'pago').toArray();

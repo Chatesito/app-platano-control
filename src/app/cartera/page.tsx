@@ -43,15 +43,17 @@ export default function CarteraPage() {
     return new Date(date.getFullYear(), date.getMonth(), 1);
   }
 
-  // Formatear período de la semana
-  function formatoSemana(inicio: Date, fin: Date): string {
+  // Formatear período de la semana (Lunes a Domingo)
+  function formatoSemana(inicio: Date): string {
+    const fin = new Date(inicio);
+    fin.setDate(inicio.getDate() + 6); // Domingo de esta semana
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
     return `${inicio.toLocaleDateString('es-CO', options)} - ${fin.toLocaleDateString('es-CO', options)}`;
   }
 
-  // Formatear mes
+  // Formatear mes (ej: "mayo 2026")
   function formatoMes(date: Date): string {
-    return date.toLocaleDateString('es-CO', { month: 'long' });
+    return date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
   }
 
   // Función para calcular ganancia de un período
@@ -89,7 +91,7 @@ export default function CarteraPage() {
     
     if (tipo === 'semana') {
       inicio = getInicioSemana(hoy);
-      periodo = formatoSemana(inicio, hoy);
+      periodo = formatoSemana(inicio);
     } else {
       inicio = getInicioMes(hoy);
       periodo = formatoMes(inicio);
@@ -102,21 +104,23 @@ export default function CarteraPage() {
     
     const ganancia = calcularGanancia(todasVentas, todasVentasRapidas, todasCompras, todosPagos, inicio);
     
-    // Buscar si existe registro para este período
-    const registroExistente = registros.find(r => r.periodo === periodo);
-    
-    if (registroExistente) {
-      // Actualizar existente
-      await db.registroGanancias.update(registroExistente.id!, { ganancia });
-    } else {
-      // Crear nuevo
-      await db.registroGanancias.add({
-        tipo,
-        periodo,
-        ganancia,
-        fechaCierre: hoy
-      });
-    }
+    // Usar una transacción para evitar duplicados si React ejecuta cargarDatos dos veces seguidas muy rápido (React Strict Mode)
+    await db.transaction('rw', db.registroGanancias, async () => {
+      const registroExistente = await db.registroGanancias.filter(r => r.periodo === periodo && r.tipo === tipo).first();
+      
+      if (registroExistente) {
+        // Actualizar existente
+        await db.registroGanancias.update(registroExistente.id!, { ganancia, fechaCierre: hoy });
+      } else {
+        // Crear nuevo
+        await db.registroGanancias.add({
+          tipo,
+          periodo,
+          ganancia,
+          fechaCierre: hoy
+        });
+      }
+    });
   }
 
   // Función para cerrar período anterior
